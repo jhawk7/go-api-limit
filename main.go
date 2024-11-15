@@ -25,12 +25,20 @@ func main() {
 	limiter := redis_rate.NewLimiter(rdb)
 	rateMiddleware := func() gin.HandlerFunc {
 		return func(c *gin.Context) {
+			// limit := redis_rate.Limit{
+			// 	Rate:   1,
+			// 	Burst:  1,
+			// 	Period: time.Hour * 24,
+			// }
+
 			res, err := limiter.Allow(c, "pingRequest", redis_rate.PerMinute(5))
 			if err != nil {
 				panic(fmt.Errorf("rate limiter failed; %v", err))
 			}
-			fmt.Printf("Allowed %v; remaining %v; [ts: %v]", res.Allowed, res.Remaining, time.Now())
-			if res.Remaining == 0 {
+			fmt.Printf("Allowed %v; remaining %v; wait %v, [ts: %v]", res.Allowed, res.Remaining, res.RetryAfter, time.Now())
+			// allowed shows if the current request is permissable;
+			// remaining shows how many more reqs can be made instantly w/o exceeding the limit
+			if res.Allowed < 1 {
 				c.AbortWithStatus(http.StatusTooManyRequests)
 				return
 			}

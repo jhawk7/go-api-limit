@@ -7,7 +7,7 @@ services:
       - ./redis-data:/data
     #restart: always
 
-  api-limit-test:
+  api-limiter:
     image: "jhawk7/go-api-limit"
     build: .
     ports:
